@@ -1,16 +1,17 @@
 "use client";
-import TopBar from "../components/TopBar";
-import SidebarToolbar from "../components/SidebarToolbar";
-import WhiteboardCanvas from "../components/WhiteboardCanvas";
-import ChatPanel from "../components/ChatPanel";
+import TopBar from "@/components/TopBar";
+import SidebarToolbar from "@/components/SidebarToolbar";
+import WhiteboardCanvas from "@/components/WhiteboardCanvas";
+import ChatPanel from "@/components/ChatPanel";
 import { useState, useEffect, useRef } from "react";
-import { socket } from "../lib/socket";
+import { socket } from "@/lib/socket";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home() {
   const [activeTool, setTool] = useState("pen");
   const [chatInput, setChatInput] = useState("");
   const [messages, setMessages] = useState([
-    { user: "Alice", text: "Welcome to DrawMeet!" },
+    // { user: "Alice", text: "Welcome to DrawMeet!" },
   ]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);

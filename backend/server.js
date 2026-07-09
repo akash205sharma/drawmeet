@@ -5,6 +5,10 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 
+const { setServers } = require("node:dns/promises");
+
+setServers(["1.1.1.1", "8.8.8.8"]);
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -22,7 +26,14 @@ mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }).then(() => console.log('MongoDB connected'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+  .catch((err) => {
+  console.error("MongoDB connection error:");
+  console.error(err);
+  console.error(err.stack);
+});
+
+
+
 
 // Socket.io events
 require('./socket')(io);

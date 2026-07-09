@@ -1,11 +1,12 @@
 import { Button } from "./ui/button";
-import { Pencil, Square, Type, StickyNote, Undo2, Redo2, Download } from "lucide-react";
+import { Pencil, Square, Type, StickyNote, Undo2, Redo2, Download, Eraser } from "lucide-react";
 
 const tools = [
   { icon: Pencil, label: "Pen", value: "pen" },
   { icon: Square, label: "Shapes", value: "shapes" },
   { icon: Type, label: "Text", value: "text" },
   { icon: StickyNote, label: "Sticky", value: "sticky" },
+  { icon: Eraser, label: "Eraser", value: "eraser" },
 ];
 
 export default function SidebarToolbar({ activeTool, setTool, onUndo, onRedo, onExport }: {

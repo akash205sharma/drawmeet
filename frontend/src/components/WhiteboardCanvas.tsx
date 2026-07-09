@@ -112,6 +112,9 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas({
     if (activeTool === "pen") {
       isDrawing.current = true;
       setLines((prev) => [...prev, { points: [pos.x, pos.y], color: "#222", strokeWidth: 3 }]);
+    } else if (activeTool === "eraser") {
+      isDrawing.current = true;
+      setLines((prev) => [...prev, { points: [pos.x, pos.y], color: "#fff", strokeWidth: 24, eraser: true }]);
     } else if (activeTool === "shapes") {
       setDrawingRect({ x: pos.x, y: pos.y, width: 0, height: 0, color: "#60a5fa" });
     } else if (activeTool === "text") {
@@ -124,7 +127,7 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas({
   const handleMouseMove = (e: any) => {
     const pos = e.target.getStage().getPointerPosition();
     socket.emit("cursor", { user: username, x: pos.x, y: pos.y });
-    if (activeTool === "pen" && isDrawing.current) {
+    if ((activeTool === "pen" || activeTool === "eraser") && isDrawing.current) {
       setLines((prev) => {
         const last = prev[prev.length - 1];
         if (!last) return prev;
@@ -137,7 +140,7 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas({
   };
 
   const handleMouseUp = (e: any) => {
-    if (activeTool === "pen" && isDrawing.current) {
+    if ((activeTool === "pen" || activeTool === "eraser") && isDrawing.current) {
       isDrawing.current = false;
       const lastLine = lines[lines.length - 1];
       if (lastLine) socket.emit("draw", lastLine);
@@ -202,7 +205,7 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas({
               strokeWidth={line.strokeWidth}
               tension={0.5}
               lineCap="round"
-              globalCompositeOperation="source-over"
+              globalCompositeOperation={line.eraser ? "destination-out" : "source-over"}
             />
           ))}
           {/* Rectangles */}
