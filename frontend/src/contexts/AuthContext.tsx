@@ -17,6 +17,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   loading: boolean;
   login: (token: string) => Promise<void>;
   logout: () => void;
@@ -32,6 +33,7 @@ export function AuthProvider({
   children: ReactNode;
 }) {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function fetchUser(token: string) {
@@ -42,9 +44,11 @@ export function AuthProvider({
         },
       });
 
+      setToken(token);
       setUser(data);
-    } catch (err) {
+    } catch {
       localStorage.removeItem("token");
+      setToken(null);
       setUser(null);
     } finally {
       setLoading(false);
@@ -58,6 +62,7 @@ export function AuthProvider({
 
   function logout() {
     localStorage.removeItem("token");
+    setToken(null);
     setUser(null);
   }
 
@@ -76,6 +81,7 @@ export function AuthProvider({
     <AuthContext.Provider
       value={{
         user,
+        token,
         loading,
         login,
         logout,

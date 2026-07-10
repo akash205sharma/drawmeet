@@ -19,7 +19,6 @@ const BoardSchema = new mongoose.Schema(
             ref:"User"
         }
     ],
-
     notes:[
         {
             text:String,

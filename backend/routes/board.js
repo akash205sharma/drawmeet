@@ -1,10 +1,13 @@
 const express = require("express");
 
 const Board = require("../models/Board");
-const Action = require("../models/Action");
 const authMiddleware = require("../middleware/authMiddleware");
-
+const BoardService = require("../services/BoardService");
+const { getReplayActions } = require("../services/ActionService");
+const JoinRequestService = require("../services/JoinRequestService");
+const JoinRequest = require("../models/JoinRequest");
 const router = express.Router();
+const Action=require("../models/Action");
 
 
 // =======================================
@@ -45,6 +48,8 @@ router.post("/", authMiddleware, async (req, res) => {
 // GET /board
 // =======================================
 
+
+
 router.get("/", authMiddleware, async (req, res) => {
 
     try {
@@ -52,20 +57,53 @@ router.get("/", authMiddleware, async (req, res) => {
         const boards = await Board.find({
             members: req.user.id,
         })
-            .sort({
-                updatedAt: -1,
+        .populate("owner","username email")
+        .sort({updatedAt:-1});
+
+        const result = await Promise.all(
+
+            boards.map(async(board)=>{
+
+                let pendingRequests=[];
+
+                if(board.owner._id.toString()===req.user.id){
+
+                    pendingRequests=
+                    await JoinRequest.find({
+
+                        board:board._id,
+
+                        status:"pending"
+
+                    })
+                    .populate("user","username email");
+
+                }
+
+                return{
+
+                    ...board.toObject(),
+
+                    pendingRequests
+
+                };
+
             })
-            .populate("owner", "username email");
 
-        res.json(boards);
+        );
 
-    } catch (err) {
+        res.json(result);
+
+    }
+
+    catch(err){
 
         console.error(err);
 
         res.status(500).json({
-            message: "Server error",
+            message:"Server error"
         });
+
     }
 
 });
@@ -79,32 +117,19 @@ router.get("/", authMiddleware, async (req, res) => {
 router.get("/:id", authMiddleware, async (req, res) => {
 
     try {
+        const board = await BoardService.getBoardForMember(req.params.id, req.user.id);
 
-        const board = await Board.findById(req.params.id)
-            .populate("owner", "username email")
-            .populate("members", "username email");
-
-        if (!board) {
-            return res.status(404).json({
-                message: "Board not found",
-            });
-        }
-
-        const hasAccess = board.members.some(
-            (member) => member._id.toString() === req.user.id
-        );
-
-        if (!hasAccess) {
-            return res.status(403).json({
-                message: "Access denied",
-            });
-        }
-
-        res.json(board);
+        res.json(BoardService.toClientBoard(board));
 
     } catch (err) {
 
         console.error(err);
+
+        if (err.statusCode === 403 || err.statusCode === 404) {
+            return res.status(err.statusCode).json({
+                message: err.message,
+            });
+        }
 
         res.status(500).json({
             message: "Server error",
@@ -122,36 +147,21 @@ router.get("/:id", authMiddleware, async (req, res) => {
 router.get("/:id/replay", authMiddleware, async (req, res) => {
 
     try {
+        await BoardService.getBoardForMember(req.params.id, req.user.id);
 
-        const board = await Board.findById(req.params.id);
-
-        if (!board) {
-            return res.status(404).json({
-                message: "Board not found",
-            });
-        }
-
-        const hasAccess = board.members.some(
-            (memberId) => memberId.toString() === req.user.id
-        );
-
-        if (!hasAccess) {
-            return res.status(403).json({
-                message: "Access denied",
-            });
-        }
-
-        const actions = await Action.find({
-            board: req.params.id,
-        }).sort({
-            createdAt: 1,
-        });
+        const actions = await getReplayActions(req.params.id);
 
         res.json(actions);
 
     } catch (err) {
 
         console.error(err);
+
+        if (err.statusCode === 403 || err.statusCode === 404) {
+            return res.status(err.statusCode).json({
+                message: err.message,
+            });
+        }
 
         res.status(500).json({
             message: "Server error",
@@ -247,5 +257,201 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     }
 
 });
+
+
+
+// =======================================
+// Request Access to Board
+// POST /board/:id/request
+// =======================================
+
+router.post("/:id/request", authMiddleware, async (req, res) => {
+    try {
+
+        await JoinRequestService.requestAccess(
+            req.params.id,
+            req.user
+        );
+
+        res.status(201).json({
+            message: "Join request sent successfully."
+        });
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(err.statusCode || 500).json({
+            message: err.message || "Server error"
+        });
+
+    }
+});
+
+
+// =======================================
+// Get Pending Join Requests
+// GET /board/:id/requests
+// =======================================
+
+router.get("/:id/requests", authMiddleware, async (req, res) => {
+
+    try {
+
+        const requests =
+            await JoinRequestService.getPendingRequests(
+                req.params.id,
+                req.user.id
+            );
+
+        res.json(requests);
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(err.statusCode || 500).json({
+            message: err.message || "Server error"
+        });
+
+    }
+
+});
+
+
+
+// =======================================
+// Approve Join Request
+// PATCH /board/:id/requests/:requestId/approve
+// =======================================
+
+router.patch(
+    "/:id/requests/:requestId/approve",
+    authMiddleware,
+    async (req, res) => {
+
+        try {
+
+            const request =
+                await JoinRequestService.approveRequest(
+
+                    req.params.id,
+
+                    req.params.requestId,
+
+                    req.user.id
+
+                );
+
+            res.json({
+                message: "User approved successfully.",
+                request,
+            });
+
+        } catch (err) {
+
+            console.error(err);
+
+            res.status(err.statusCode || 500).json({
+                message: err.message || "Server error"
+            });
+
+        }
+
+    }
+);
+
+
+// =======================================
+// Reject Join Request
+// PATCH /board/:id/requests/:requestId/reject
+// =======================================
+
+router.patch(
+    "/:id/requests/:requestId/reject",
+    authMiddleware,
+    async (req, res) => {
+
+        try {
+
+            const request =
+                await JoinRequestService.rejectRequest(
+
+                    req.params.id,
+
+                    req.params.requestId,
+
+                    req.user.id
+
+                );
+
+            res.json({
+                message: "Request rejected.",
+                request,
+            });
+
+        } catch (err) {
+
+            console.error(err);
+
+            res.status(err.statusCode || 500).json({
+                message: err.message || "Server error"
+            });
+
+        }
+
+    }
+);
+
+
+// =======================================
+// Invite Member by Email
+// POST /board/:id/invite
+// =======================================
+    
+router.post(
+    "/:id/invite",
+    authMiddleware,
+    async (req, res) => {
+
+        try {
+
+            const { email } = req.body;
+
+            if (!email) {
+
+                return res.status(400).json({
+                    message: "Email is required"
+                });
+
+            }
+
+            await JoinRequestService.inviteByEmail(
+
+                req.params.id,
+
+                req.user.id,
+
+                email
+
+            );
+
+            res.json({
+                message: "Member added successfully."
+            });
+
+        } catch (err) {
+
+            console.error(err);
+
+            res.status(err.statusCode || 500).json({
+                message: err.message || "Server error"
+            });
+
+        }
+
+    }
+);
+
 
 module.exports = router;

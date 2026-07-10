@@ -72,10 +72,12 @@ export default function AuthPage() {
 
             router.push("/dashboard");
  
-        } catch (error: any) {
-            setMessage(
-                error.response?.data?.message || "Something went wrong."
-            );
+        } catch (error: unknown) {
+            const message = axios.isAxiosError(error)
+                ? error.response?.data?.message
+                : "Something went wrong.";
+
+            setMessage(message || "Something went wrong.");
         } finally {
             setLoading(false);
         }
@@ -145,7 +147,7 @@ export default function AuthPage() {
                 <div className="mt-8 text-center text-gray-400">
                     {isLogin ? (
                         <>
-                            Don't have an account?{" "}
+                            Don&apos;t have an account?{" "}
                             <button
                                 type="button"
                                 onClick={() => {
