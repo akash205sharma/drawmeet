@@ -6,7 +6,7 @@ import axios from "axios";
 
 import TopBar from "@/components/TopBar";
 import SidebarToolbar from "@/components/SidebarToolbar";
-import WhiteboardCanvas from "@/components/WhiteboardCanvas";
+import WhiteboardCanvas from "@/components/canvas/WhiteboardCanvas";
 import ChatPanel from "@/components/ChatPanel";
 import { socket, setSocketAuthToken } from "@/lib/socket";
 import { useAuth } from "@/contexts/AuthContext";

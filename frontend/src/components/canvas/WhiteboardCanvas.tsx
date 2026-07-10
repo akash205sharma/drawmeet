@@ -4,263 +4,38 @@ import { useEffect, useImperativeHandle, useRef, useState, forwardRef } from "re
 import { Stage, Layer, Line, Rect, Text, Group, Circle } from "react-konva";
 import Konva from "konva";
 
-import { socket } from "../lib/socket";
+import { socket } from "@/lib/socket";
 
-const STICKY_COLORS = ["#fef08a", "#a7f3d0", "#fca5a5", "#c7d2fe", "#fcd34d"];
-const CURSOR_COLORS = ["#f87171", "#60a5fa", "#34d399", "#fbbf24", "#a78bfa", "#f472b6"];
+import type {
+  BoardAction,
+  BoardActionPayload,
+  BoardLine,
+  BoardRect,
+  BoardSticky,
+  BoardText,
+  BoardUser,
+  CanvasItem,
+  ImperativeHandle,
+  PointerLikeEvent,
+  SocketCursorPayload,
+  UndoEntry,
+  WhiteboardCanvasProps,
+} from "./types";
 
-type BoardUser = {
-  id: string;
-  username: string;
-  email: string;
-};
 
-type BoardLine = {
-  id: string;
-  opId: string;
-  points: number[];
-  color: string;
-  strokeWidth: number;
-  eraser?: boolean;
-};
+import { STICKY_COLORS } from "./constants";
+import { createId } from "./utils/ids";
+import { getUserColor } from "./utils/colors";
+import { getPointerPosition } from "./utils/pointer";
+import { extractItem, getItemId } from "./utils/item";
+import { buildBoardState } from "./utils/boardReplay";
+import CursorLayer from "./layers/CursorLayer";
+import StickyLayer from "./layers/StickyLayer";
+import TextLayer from "./layers/TextLayer";
+import ShapesLayer from "./layers/ShapesLayer";
+import DrawingLayer from "./layers/DrawingLayer";
 
-type BoardRect = {
-  id: string;
-  opId: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color: string;
-};
 
-type BoardText = {
-  id: string;
-  opId: string;
-  x: number;
-  y: number;
-  text: string;
-};
-
-type BoardSticky = {
-  id: string;
-  opId: string;
-  x: number;
-  y: number;
-  text: string;
-  color: string;
-};
-
-type CanvasItem = BoardLine | BoardRect | BoardText | BoardSticky;
-
-type BoardActionPayload = {
-  opId?: string;
-  id?: string;
-  actionType?: string;
-  item?: CanvasItem;
-  targetItem?: CanvasItem;
-  x?: number;
-  y?: number;
-};
-
-type BoardAction = {
-  type: string;
-  payload?: unknown;
-  user?: BoardUser | null;
-  opId?: string;
-};
-
-type PointerLikeEvent = {
-  target?: {
-    getStage?: () => {
-      getPointerPosition?: () => { x: number; y: number } | null;
-    } | null;
-  } | null;
-};
-
-type SocketCursorPayload = {
-  x: number;
-  y: number;
-  opId?: string;
-};
-
-type ImperativeHandle = {
-  handleUndo?: () => void;
-  handleRedo?: () => void;
-  exportAsImage?: () => void;
-};
-
-type UndoEntry = {
-  type: string;
-  item: CanvasItem;
-};
-
-type WhiteboardCanvasProps = {
-  width?: number;
-  height?: number;
-  activeTool?: string;
-  boardId?: string;
-  authenticatedUser?: BoardUser | null;
-  initialActions?: BoardAction[];
-};
-
-function getUserColor(name: string) {
-  let hash = 0;
-
-  for (let index = 0; index < name.length; index += 1) {
-    hash = name.charCodeAt(index) + ((hash << 5) - hash);
-  }
-
-  return CURSOR_COLORS[Math.abs(hash) % CURSOR_COLORS.length];
-}
-
-function createId() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-function getPointerPosition(event: PointerLikeEvent) {
-  return event?.target?.getStage?.()?.getPointerPosition?.() || { x: 0, y: 0 };
-}
-
-function getItemId(item: unknown) {
-  if (!item || typeof item !== "object") {
-    return undefined;
-  }
-
-  const candidate = item as {
-    id?: string;
-    item?: { id?: string };
-    payload?: { id?: string; item?: { id?: string } };
-  };
-
-  return candidate.id || candidate.item?.id || candidate.payload?.id || candidate.payload?.item?.id;
-}
-
-function extractItem(action: BoardAction | null | undefined) {
-  if (!action) {
-    return null;
-  }
-
-  const payload = action.payload;
-
-  if (payload && typeof payload === "object" && "item" in payload && (payload as BoardActionPayload).item) {
-    return (payload as BoardActionPayload).item || null;
-  }
-
-  if (payload && typeof payload === "object" && "id" in payload) {
-    return payload as CanvasItem;
-  }
-
-  return null;
-}
-
-function buildBoardState(actions: BoardAction[]) {
-  const lines: BoardLine[] = [];
-  const rects: BoardRect[] = [];
-  const texts: BoardText[] = [];
-  const stickies: BoardSticky[] = [];
-  const undoStack: UndoEntry[] = [];
-
-  const removeById = <T extends CanvasItem>(collection: T[], item: CanvasItem | null) => {
-    const itemId = getItemId(item);
-
-    if (!itemId) {
-      collection.pop();
-      return;
-    }
-
-    const index = collection.findIndex((entry) => getItemId(entry) === itemId);
-
-    if (index >= 0) {
-      collection.splice(index, 1);
-    }
-  };
-
-  actions.forEach((action) => {
-    const type = action?.type;
-    const item = extractItem(action);
-
-    if (!type || !item) {
-      return;
-    }
-
-    if (type === "draw") {
-      lines.push(item as BoardLine);
-      undoStack.push({ type: "draw", item });
-      return;
-    }
-
-    if (type === "shape") {
-      rects.push(item as BoardRect);
-      undoStack.push({ type: "shape", item });
-      return;
-    }
-
-    if (type === "text") {
-      texts.push(item as BoardText);
-      undoStack.push({ type: "text", item });
-      return;
-    }
-
-    if (type === "sticky" || type === "note") {
-      stickies.push(item as BoardSticky);
-      undoStack.push({ type: "sticky", item });
-      return;
-    }
-
-    if (type === "undo") {
-      const payload = action?.payload && typeof action.payload === "object" ? action.payload as BoardActionPayload : undefined;
-      const target = payload?.item || payload?.targetItem || item;
-
-      if (payload?.actionType === "shape") {
-        removeById(rects, target);
-      } else if (payload?.actionType === "text") {
-        removeById(texts, target);
-      } else if (payload?.actionType === "sticky") {
-        removeById(stickies, target);
-      } else {
-        removeById(lines, target);
-      }
-
-      const targetId = getItemId(target);
-      const historyIndex = undoStack.findIndex((entry) => getItemId(entry.item) === targetId);
-
-      if (historyIndex >= 0) {
-        undoStack.splice(historyIndex, 1);
-      }
-      return;
-    }
-
-    if (type === "redo") {
-      const payload = action?.payload && typeof action.payload === "object" ? action.payload as BoardActionPayload : undefined;
-
-      if (payload?.actionType === "shape") {
-        rects.push(item as BoardRect);
-      } else if (payload?.actionType === "text") {
-        texts.push(item as BoardText);
-      } else if (payload?.actionType === "sticky") {
-        stickies.push(item as BoardSticky);
-      } else {
-        lines.push(item as BoardLine);
-      }
-
-      undoStack.push({ type: payload?.actionType || type, item });
-    }
-  });
-
-  return {
-    lines,
-    rects,
-    texts,
-    stickies,
-    undoStack,
-    redoStack: [],
-  };
-}
 
 const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
   {
@@ -741,79 +516,22 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
         onTouchEnd={handleMouseUp}
       >
         <Layer>
-          {lines.map((line) => (
-            <Line
-              key={line.id}
-              points={line.points}
-              stroke={line.color}
-              strokeWidth={line.strokeWidth}
-              tension={0.5}
-              lineCap="round"
-              globalCompositeOperation={line.eraser ? "destination-out" : "source-over"}
-            />
-          ))}
+          <DrawingLayer lines={lines} />
 
-          {rects.map((rect) => (
-            <Rect
-              key={rect.id}
-              x={rect.x}
-              y={rect.y}
-              width={rect.width}
-              height={rect.height}
-              fill={rect.color}
-              opacity={0.4}
-              cornerRadius={8}
-            />
-          ))}
+          <ShapesLayer
+            rects={rects}
+            drawingRect={drawingRect}
+          />
 
-          {drawingRect && (
-            <Rect
-              x={drawingRect.x}
-              y={drawingRect.y}
-              width={drawingRect.width}
-              height={drawingRect.height}
-              fill={drawingRect.color}
-              opacity={0.3}
-              cornerRadius={8}
-            />
-          )}
+          <TextLayer texts={texts} />
 
-          {texts.map((textItem) => (
-            <Text
-              key={textItem.id}
-              x={textItem.x}
-              y={textItem.y}
-              text={textItem.text}
-              fontSize={22}
-              fill="#222"
-            />
-          ))}
+          <StickyLayer
+            stickies={stickies}
+          />
 
-          {stickies.map((sticky) => (
-            <Group key={sticky.id} x={sticky.x} y={sticky.y}>
-              <Rect width={160} height={120} fill={sticky.color} cornerRadius={12} shadowBlur={8} opacity={0.95} />
-              <Text text={sticky.text} x={12} y={16} width={136} height={88} fontSize={18} fill="#222" fontStyle="bold" />
-            </Group>
-          ))}
-
-          {Object.entries(cursors).map(([userId, cursor]) => {
-            const color = getUserColor(cursor.username);
-
-            return (
-              <Group key={userId} x={cursor.x} y={cursor.y}>
-                <Circle radius={8} fill={color} shadowBlur={4} />
-                <Text
-                  text={cursor.username}
-                  x={12}
-                  y={-8}
-                  fontSize={14}
-                  fill={color}
-                  fontStyle="bold"
-                />
-              </Group>
-            );
-          })}
-
+          <CursorLayer
+            cursors={cursors}
+          />
         </Layer>
       </Stage>
     </div>
