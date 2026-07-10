@@ -1,6 +1,14 @@
 "use client";
 
 import axios from "axios";
+import {
+  X,
+  UserCheck,
+  UserX,
+  Users,
+  Mail,
+  Calendar,
+} from "lucide-react";
 import { Board } from "./BoardCard";
 
 interface Props {
@@ -42,7 +50,10 @@ export default function ManageRequestsDialog({
         ),
       });
     } catch (err: any) {
-      alert(err.response?.data?.message || "Unable to approve request.");
+      alert(
+        err.response?.data?.message ||
+          "Unable to approve request."
+      );
     }
   }
 
@@ -65,79 +76,150 @@ export default function ManageRequestsDialog({
         ),
       });
     } catch (err: any) {
-      alert(err.response?.data?.message || "Unable to reject request.");
+      alert(
+        err.response?.data?.message ||
+          "Unable to reject request."
+      );
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
 
-      <div className="w-full max-w-lg rounded-xl bg-slate-900 p-6">
+      <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
 
-        <div className="mb-6 flex items-center justify-between">
+        {/* Header */}
 
-          <h2 className="text-2xl font-bold text-white">
-            Pending Requests
-          </h2>
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+
+          <div className="flex items-center gap-3">
+
+            <div className="rounded-xl bg-amber-100 p-3 text-amber-600">
+              <Users size={22} />
+            </div>
+
+            <div>
+
+              <h2 className="text-xl font-bold text-slate-900">
+                Pending Requests
+              </h2>
+
+              <p className="text-sm text-slate-500">
+                Review collaboration requests.
+              </p>
+
+            </div>
+
+          </div>
 
           <button
             onClick={onClose}
-            className="text-2xl text-gray-400 hover:text-white"
+            className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
           >
-            ✕
+            <X size={20} />
           </button>
 
         </div>
 
-        {board.pendingRequests.length === 0 ? (
-          <div className="py-10 text-center text-gray-400">
-            No pending requests.
-          </div>
-        ) : (
-          <div className="space-y-4">
+        {/* Body */}
 
-            {board.pendingRequests.map((request) => (
-              <div
-                key={request._id}
-                className="rounded-lg border border-slate-700 p-4"
-              >
+        <div className="max-h-[500px] overflow-y-auto p-6">
 
-                <h3 className="font-semibold text-white">
-                  {request.user.username}
-                </h3>
+          {board.pendingRequests.length === 0 ? (
 
-                <p className="text-sm text-gray-400">
-                  {request.user.email}
-                </p>
+            <div className="py-16 text-center">
 
-                <p className="mt-2 text-xs text-gray-500">
-                  Requested{" "}
-                  {new Date(request.requestedAt).toLocaleString()}
-                </p>
+              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100">
 
-                <div className="mt-4 flex gap-3">
+                <Users size={34} className="text-slate-400" />
 
-                  <button
-                    onClick={() => approve(request._id)}
-                    className="flex-1 rounded bg-green-600 py-2 text-white hover:bg-green-700"
-                  >
-                    Approve
-                  </button>
+              </div>
 
-                  <button
-                    onClick={() => reject(request._id)}
-                    className="flex-1 rounded bg-red-600 py-2 text-white hover:bg-red-700"
-                  >
-                    Reject
-                  </button>
+              <h3 className="text-xl font-semibold text-slate-900">
+                No Pending Requests
+              </h3>
+
+              <p className="mt-2 text-slate-500">
+                You're all caught up.
+              </p>
+
+            </div>
+
+          ) : (
+
+            <div className="space-y-5">
+
+              {board.pendingRequests.map((request) => (
+
+                <div
+                  key={request._id}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+                >
+
+                  <div className="flex items-start justify-between">
+
+                    <div className="flex items-center gap-4">
+
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-600">
+
+                        {request.user.username.charAt(0).toUpperCase()}
+
+                      </div>
+
+                      <div>
+
+                        <h3 className="font-semibold text-slate-900">
+                          {request.user.username}
+                        </h3>
+
+                        <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+                          <Mail size={15} />
+                          {request.user.email}
+                        </div>
+
+                        <div className="mt-2 flex items-center gap-2 text-xs text-slate-400">
+                          <Calendar size={14} />
+                          Requested on{" "}
+                          {new Date(
+                            request.requestedAt
+                          ).toLocaleString()}
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  <div className="mt-5 flex gap-3">
+
+                    <button
+                      onClick={() => approve(request._id)}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-600 py-2.5 font-medium text-white transition hover:bg-green-700"
+                    >
+                      <UserCheck size={18} />
+                      Approve
+                    </button>
+
+                    <button
+                      onClick={() => reject(request._id)}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-2.5 font-medium text-red-600 transition hover:bg-red-100"
+                    >
+                      <UserX size={18} />
+                      Reject
+                    </button>
+
+                  </div>
 
                 </div>
 
-              </div>
-            ))}
+              ))}
 
-          </div>
-        )}
+            </div>
+
+          )}
+
+        </div>
 
       </div>
 

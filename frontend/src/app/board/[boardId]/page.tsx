@@ -283,8 +283,18 @@ export default function BoardPage() {
 
   if (loading || boardLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-950 text-white">
-        Loading board...
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="rounded-3xl border border-slate-200 bg-white px-10 py-8 shadow-lg">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+
+          <h3 className="mt-5 text-center text-lg font-semibold text-slate-900">
+            Loading Board
+          </h3>
+
+          <p className="mt-2 text-center text-sm text-slate-500">
+            Preparing your collaborative workspace...
+          </p>
+        </div>
       </div>
     );
   }
