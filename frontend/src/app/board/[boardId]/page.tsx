@@ -100,7 +100,7 @@ export default function BoardPage() {
       return "/board";
     }
 
-    return `${process.env.NEXT_PUBLIC_API_URL}/board/${boardId}`;
+    return `${process.env.NEXT_PUBLIC_WEBSITE_URL}/board/${boardId}`;
   }, [boardId]);
 
   useEffect(() => {
