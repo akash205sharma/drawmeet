@@ -104,9 +104,9 @@ export default function TopBar({
           variant="outline"
           size="sm"
           onClick={handleCopy}
-          className="flex gap-1"
+          className="flex gap-2 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
         >
-          <Copy className="w-4 h-4" />
+          <Copy className="w-4 h-4 transition-transform duration-200 group-hover:rotate-12" />
           <span className="hidden sm:inline">Invite</span>
         </Button>
 
