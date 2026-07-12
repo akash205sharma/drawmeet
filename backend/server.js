@@ -1,10 +1,10 @@
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
+const path = require("path");
 const cors = require('cors');
 const mongoose = require('mongoose');
 const { Server } = require('socket.io');
-
 const { setServers } = require("node:dns/promises");
 
 setServers(["1.1.1.1", "8.8.8.8"]);
@@ -39,6 +39,9 @@ mongoose.connect(process.env.MONGO_URI, {
 require('./socket')(io);
 
 // API routes
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "entrypage.html"));
+});
 app.use('/auth', require('./routes/auth'));
 app.use('/board', require('./routes/board'));
 

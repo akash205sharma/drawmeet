@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DrawMeet Backend</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:#0f172a;
+    color:white;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.card{
+    width:520px;
+    background:#1e293b;
+    padding:40px;
+    border-radius:18px;
+    box-shadow:0 15px 40px rgba(0,0,0,.35);
+}
+
+h1{
+    margin-bottom:10px;
+}
+
+.subtitle{
+    color:#94a3b8;
+    margin-bottom:30px;
+}
+
+.status{
+    display:flex;
+    justify-content:space-between;
+    padding:12px 0;
+    border-bottom:1px solid #334155;
+}
+
+.status:last-child{
+    border-bottom:none;
+}
+
+.label{
+    color:#cbd5e1;
+}
+
+.value{
+    color:#22c55e;
+    font-weight:bold;
+}
+
+.links{
+    margin-top:30px;
+}
+
+.links a{
+    display:block;
+    margin-top:12px;
+    color:#38bdf8;
+    text-decoration:none;
+}
+
+.footer{
+    margin-top:30px;
+    text-align:center;
+    color:#64748b;
+    font-size:14px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h1>🎨 DrawMeet Backend</h1>
+
+<p class="subtitle">
+Collaborative Whiteboard API & Socket.IO Server
+</p>
+
+<div class="status">
+<span class="label">API</span>
+<span class="value">✅ Running</span>
+</div>
+
+<div class="status">
+<span class="label">Socket.IO</span>
+<span class="value">✅ Online</span>
+</div>
+
+<div class="status">
+<span class="label">Database</span>
+<span class="value">✅ Connected</span>
+</div>
+
+<div class="status">
+<span class="label">Version</span>
+<span class="value">v1.0.0</span>
+</div>
+
+<div class="links">
+<a href="https://drawmeet.vercel.app" target="_blank">
+🌐 Frontend
+</a>
+
+<a href="https://github.com/akash205sharma/drawmeet" target="_blank">
+📂 GitHub Repository
+</a>
+</div>
+
+<div class="footer">
+Built with Express • Socket.IO • MongoDB
+</div>
+
+</div>
+
+</body>
+</html>
