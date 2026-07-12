@@ -140,7 +140,7 @@ export default function ManageRequestsDialog({
               </h3>
 
               <p className="mt-2 text-slate-500">
-                You're all caught up.
+                You&apos;re all caught up.
               </p>
 
             </div>
