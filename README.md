@@ -4,7 +4,7 @@ Backend: https://drawmeet.onrender.com
 
 Ai Service: https://drawmeet-ai.onrender.com
 
-<video src="./assets/demo.mp4" controls width="100%"></video>
+<video src="./assets/drawmeet_demo.mp4" controls width="100%"></video>
 
 
 🚀 Excited to share **DrawMeet** — a real-time collaborative whiteboard that I've been building over the past few weeks.
