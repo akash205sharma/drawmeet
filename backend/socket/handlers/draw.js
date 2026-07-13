@@ -1,6 +1,6 @@
 const ActionService = require('../../services/ActionService');
 
-const SUPPORTED_EVENTS = new Set(['draw', 'shape', 'text', 'sticky', 'note', 'erase', 'undo', 'redo']);
+const SUPPORTED_EVENTS = new Set(['draw', 'shape', 'arrow', 'text', 'sticky', 'note', 'erase', 'undo', 'redo']);
 
 function getPayload(data) {
   if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'payload')) {

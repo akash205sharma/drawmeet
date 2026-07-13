@@ -25,6 +25,7 @@ export default function TopBar({
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(boardTitle);
   const [saving, setSaving] = useState(false);
+  
 
   const handleCopy = () => {
     navigator.clipboard.writeText(inviteLink);

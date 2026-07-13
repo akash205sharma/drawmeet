@@ -5,7 +5,17 @@ const registerCursorHandlers = require('./handlers/cursor');
 const registerChatHandlers = require('./handlers/chat');
 const registerTypingHandlers = require('./handlers/typing');
 
+
+let ioInstance;
+
+function getIO() {
+  return ioInstance;
+}
+
 module.exports = function registerSocket(io) {
+
+  ioInstance = io;
+
   const context = {
     boardUsers: new Map(),
     typingUsers: new Map(),
@@ -21,3 +31,5 @@ module.exports = function registerSocket(io) {
     registerTypingHandlers(socket, io, context);
   });
 };
+
+module.exports.getIO = getIO;

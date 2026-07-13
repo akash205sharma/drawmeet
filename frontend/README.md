@@ -1,12 +1,12 @@
-
-1. auth -> set users according to socket connection and authentication
-2. unique id for each board, and users should be able to join a board by id
-3. last user is beign taken for current user, need to fix that
-4. loading state for board and users and reloads
-
-
-5. redis for caching and storing board data
-
+DrawMeet architecture
+Why Socket.IO?
+Why MongoDB?
+How authentication works
+How AI diagram generation works
+How collaboration works
+Why Konva?
+How undo/redo works
+What challenges you faced
 
 
 

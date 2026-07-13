@@ -9,6 +9,7 @@ import { socket } from "@/lib/socket";
 import type {
   BoardAction,
   BoardActionPayload,
+  BoardArrow,
   BoardLine,
   BoardRect,
   BoardSticky,
@@ -34,6 +35,7 @@ import StickyLayer from "./layers/StickyLayer";
 import TextLayer from "./layers/TextLayer";
 import ShapesLayer from "./layers/ShapesLayer";
 import DrawingLayer from "./layers/DrawingLayer";
+import ArrowLayer from "./layers/ArrowLayer";
 
 
 
@@ -48,6 +50,7 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
   }: WhiteboardCanvasProps,
   ref: React.ForwardedRef<ImperativeHandle>,
 ) {
+  const [arrows, setArrows] = useState<BoardArrow[]>([]);
   const [lines, setLines] = useState<BoardLine[]>([]);
   const [rects, setRects] = useState<BoardRect[]>([]);
   const [texts, setTexts] = useState<BoardText[]>([]);
@@ -67,6 +70,7 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
   >({});
   const [undoStack, setUndoStack] = useState<UndoEntry[]>([]);
   const [redoStack, setRedoStack] = useState<UndoEntry[]>([]);
+  
 
   const isDrawing = useRef(false);
   const stageRef = useRef<Konva.Stage | null>(null);
@@ -76,6 +80,7 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
   useEffect(() => {
     const replayState = buildBoardState(initialActions);
     setLines(replayState.lines);
+    setArrows(replayState.arrows);
     setRects(replayState.rects);
     setTexts(replayState.texts);
     setStickies(replayState.stickies);
@@ -160,6 +165,35 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
         return;
       }
 
+      if (type === "arrow") {
+
+        const item = extractItem(action);
+
+        if (!item) {
+          return;
+        }
+
+        const arrow = item as BoardArrow;
+
+        setArrows(prev =>
+          prev.some(entry => getItemId(entry) === getItemId(arrow))
+            ? prev
+            : [...prev, arrow]
+        );
+
+        setUndoStack(prev => [
+          ...prev,
+          {
+            type: "arrow",
+            item,
+          },
+        ]);
+
+        setRedoStack([]);
+
+        return;
+      }
+
       if (type === "undo") {
         const payload = action?.payload && typeof action.payload === "object" ? action.payload as BoardActionPayload : undefined;
         const target = payload?.item || payload?.targetItem || extractItem(action);
@@ -172,7 +206,16 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
           setTexts((prev) => prev.filter((entry) => getItemId(entry) !== targetId));
         } else if (targetType === "sticky") {
           setStickies((prev) => prev.filter((entry) => getItemId(entry) !== targetId));
-        } else {
+        } else if (targetType === "arrow") {
+
+          setArrows(prev =>
+            prev.filter(entry =>
+              getItemId(entry) !== targetId
+            )
+          );
+
+        }
+        else {
           setLines((prev) => prev.filter((entry) => getItemId(entry) !== targetId));
         }
 
@@ -201,7 +244,17 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
         } else if (targetType === "sticky") {
           const sticky = target as BoardSticky;
           setStickies((prev) => (prev.some((entry) => getItemId(entry) === getItemId(sticky)) ? prev : [...prev, sticky]));
-        } else {
+        } else if (targetType === "arrow") {
+          const arrow = target as BoardArrow;
+          setArrows(prev =>
+            prev.some(entry =>
+              getItemId(entry) === getItemId(arrow)
+            )
+              ? prev
+              : [...prev, arrow]
+          );
+        }
+        else {
           const line = target as BoardLine;
           setLines((prev) => (prev.some((entry) => getItemId(entry) === getItemId(line)) ? prev : [...prev, line]));
         }
@@ -217,7 +270,7 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
     const handleSticky = (action: BoardAction) => handleAction("sticky", action);
     const handleUndo = (action: BoardAction) => handleAction("undo", action);
     const handleRedo = (action: BoardAction) => handleAction("redo", action);
-
+    const handleArrow = (action: BoardAction) => handleAction("arrow", action);
     const handleCursor = (action: { payload?: SocketCursorPayload; user?: BoardUser }) => {
       const payload = action?.payload;
       const user = action?.user;
@@ -243,6 +296,7 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
     socket.on("undo", handleUndo);
     socket.on("redo", handleRedo);
     socket.on("cursor", handleCursor);
+    socket.on("arrow", handleArrow);
 
     return () => {
       socket.off("draw", handleDraw);
@@ -252,6 +306,7 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
       socket.off("undo", handleUndo);
       socket.off("redo", handleRedo);
       socket.off("cursor", handleCursor);
+      socket.off("arrow", handleArrow);
     };
   }, [authenticatedUser?.id]);
 
@@ -286,6 +341,8 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
       setTexts((prev) => prev.filter((entry) => getItemId(entry) !== itemId));
     } else if (last.type === "sticky") {
       setStickies((prev) => prev.filter((entry) => getItemId(entry) !== itemId));
+    } else if (last.type === "arrow") {
+      setArrows((prev) => prev.filter(entry => getItemId(entry) !== itemId));
     } else {
       setLines((prev) => prev.filter((entry) => getItemId(entry) !== itemId));
     }
@@ -313,7 +370,13 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
       setTexts((prev) => [...prev, last.item as BoardText]);
     } else if (last.type === "sticky") {
       setStickies((prev) => [...prev, last.item as BoardSticky]);
-    } else {
+    } else if (last.type === "arrow") {
+      setArrows(prev => [
+        ...prev,
+        last.item as BoardArrow,
+      ]);
+    }
+    else {
       setLines((prev) => [...prev, last.item as BoardLine]);
     }
 
@@ -522,6 +585,7 @@ const WhiteboardCanvas = forwardRef(function WhiteboardCanvas(
             rects={rects}
             drawingRect={drawingRect}
           />
+          <ArrowLayer arrows={arrows} />
 
           <TextLayer texts={texts} />
 

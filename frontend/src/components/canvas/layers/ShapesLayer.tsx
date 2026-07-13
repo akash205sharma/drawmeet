@@ -1,4 +1,4 @@
-import { Rect } from "react-konva";
+import { Rect, } from "react-konva";
 import type { BoardRect } from "../types";
 
 interface Props {

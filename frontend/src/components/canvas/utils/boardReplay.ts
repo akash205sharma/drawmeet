@@ -5,6 +5,7 @@ import type {
   BoardRect,
   BoardSticky,
   BoardText,
+  BoardArrow,
   CanvasItem,
   UndoEntry,
 } from "../types";
@@ -20,6 +21,7 @@ export function buildBoardState(actions: BoardAction[]) {
   const texts: BoardText[] = [];
   const stickies: BoardSticky[] = [];
   const undoStack: UndoEntry[] = [];
+  const arrows: BoardArrow[] = [];
 
   const removeById = <T extends CanvasItem>(
     collection: T[],
@@ -58,6 +60,14 @@ export function buildBoardState(actions: BoardAction[]) {
         undoStack.push({ type: "shape", item });
         break;
 
+      case "arrow":
+        arrows.push(item as BoardArrow);
+        undoStack.push({
+          type: "arrow",
+          item,
+        });
+        break;
+
       case "text":
         texts.push(item as BoardText);
         undoStack.push({ type: "text", item });
@@ -72,7 +82,7 @@ export function buildBoardState(actions: BoardAction[]) {
       case "undo": {
         const payload =
           action.payload &&
-          typeof action.payload === "object"
+            typeof action.payload === "object"
             ? (action.payload as BoardActionPayload)
             : undefined;
 
@@ -83,10 +93,13 @@ export function buildBoardState(actions: BoardAction[]) {
 
         if (payload?.actionType === "shape") {
           removeById(rects, target);
-        } else if (payload?.actionType === "text") {
+        } 
+        else if (payload?.actionType === "text") {
           removeById(texts, target);
         } else if (payload?.actionType === "sticky") {
           removeById(stickies, target);
+        } else if (payload?.actionType === "arrow") {
+          removeById(arrows, target);
         } else {
           removeById(lines, target);
         }
@@ -107,16 +120,19 @@ export function buildBoardState(actions: BoardAction[]) {
       case "redo": {
         const payload =
           action.payload &&
-          typeof action.payload === "object"
+            typeof action.payload === "object"
             ? (action.payload as BoardActionPayload)
             : undefined;
 
         if (payload?.actionType === "shape") {
           rects.push(item as BoardRect);
-        } else if (payload?.actionType === "text") {
+        } 
+        else if (payload?.actionType === "text") {
           texts.push(item as BoardText);
         } else if (payload?.actionType === "sticky") {
           stickies.push(item as BoardSticky);
+        } else if (payload?.actionType === "arrow") {
+          arrows.push(item as BoardArrow);
         } else {
           lines.push(item as BoardLine);
         }
@@ -134,6 +150,7 @@ export function buildBoardState(actions: BoardAction[]) {
   return {
     lines,
     rects,
+    arrows,
     texts,
     stickies,
     undoStack,

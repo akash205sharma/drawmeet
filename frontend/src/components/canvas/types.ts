@@ -4,6 +4,14 @@ export type BoardUser = {
   email: string;
 };
 
+export type BoardArrow = {
+  id: string;
+  opId: string;
+  points: number[];
+  color: string;
+  strokeWidth: number;
+};
+
 export type BoardLine = {
   id: string;
   opId: string;
@@ -21,6 +29,9 @@ export type BoardRect = {
   width: number;
   height: number;
   color: string;
+
+  shape?: "rectangle" | "circle" | "diamond";
+
 };
 
 export type BoardText = {
@@ -43,6 +54,7 @@ export type BoardSticky = {
 export type CanvasItem =
   | BoardLine
   | BoardRect
+  | BoardArrow
   | BoardText
   | BoardSticky;
 

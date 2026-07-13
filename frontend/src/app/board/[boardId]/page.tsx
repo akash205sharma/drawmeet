@@ -10,6 +10,9 @@ import WhiteboardCanvas from "@/components/canvas/WhiteboardCanvas";
 import ChatPanel from "@/components/ChatPanel";
 import { socket, setSocketAuthToken } from "@/lib/socket";
 import { useAuth } from "@/contexts/AuthContext";
+import GenerateDiagramDialog from "@/components/GenerateDiagramDialog";
+import { summarizeBoard } from "@/lib/ai";
+import AISummaryDialog from "@/components/AISummaryDialog";
 
 interface User {
   id: string;
@@ -84,6 +87,10 @@ export default function BoardPage() {
   const [error, setError] = useState<string>("");
   const [showRequestAccess, setShowRequestAccess] = useState(false);
   const [requestLoading, setRequestLoading] = useState(false);
+  const [showAIDialog, setShowAIDialog] = useState(false);
+  const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summary, setSummary] = useState("");
 
   const whiteboardRef = useRef<{
     handleUndo?: () => void;
@@ -281,6 +288,34 @@ export default function BoardPage() {
     });
   };
 
+  const handleSummarize = async () => {
+    if (!token || !boardId) return;
+
+    setSummaryDialogOpen(true);
+    setSummaryLoading(true);
+    setSummary("");
+
+    try {
+      const result = await summarizeBoard({
+        token,
+        boardId,
+      });
+
+      setSummary(result.summary);
+    } catch (err: any) {
+      console.error(err);
+
+      setSummary(
+        err?.response?.data?.message ||
+        "Unable to generate board summary."
+      );
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+
+
   if (loading || boardLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
@@ -300,81 +335,81 @@ export default function BoardPage() {
   }
   if (showRequestAccess) {
     return (
-  <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 px-4">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 px-4">
 
-    <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-xl">
+        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-xl">
 
-      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-10 w-10 text-amber-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 15v2m0-10h.01M5.93 19h12.14A2 2 0 0020 17V7a2 2 0 00-1.93-2H5.93A2 2 0 004 7v10a2 2 0 001.93 2z"
-          />
-        </svg>
-      </div>
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-10 w-10 text-amber-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 15v2m0-10h.01M5.93 19h12.14A2 2 0 0020 17V7a2 2 0 00-1.93-2H5.93A2 2 0 004 7v10a2 2 0 001.93 2z"
+              />
+            </svg>
+          </div>
 
-      <h1 className="text-3xl font-bold text-slate-900">
-        Private Board
-      </h1>
+          <h1 className="text-3xl font-bold text-slate-900">
+            Private Board
+          </h1>
 
-      <p className="mt-3 text-slate-500">
-        You don't currently have permission to access this board.
-        Send a request to the owner and you'll be notified once
-        your access is approved.
-      </p>
+          <p className="mt-3 text-slate-500">
+            You don't currently have permission to access this board.
+            Send a request to the owner and you'll be notified once
+            your access is approved.
+          </p>
 
-      <button
-        disabled={requestLoading}
-        onClick={async () => {
-          try {
-            setRequestLoading(true);
+          <button
+            disabled={requestLoading}
+            onClick={async () => {
+              try {
+                setRequestLoading(true);
 
-            await axios.post(
-              `${process.env.NEXT_PUBLIC_API_URL}/board/${boardId}/request`,
-              {},
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
+                await axios.post(
+                  `${process.env.NEXT_PUBLIC_API_URL}/board/${boardId}/request`,
+                  {},
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
+
+                // alert("Request sent successfully.");
+
+                router.push("/dashboard");
+              } catch (err: any) {
+                alert(
+                  err.response?.data?.message ??
+                  "Unable to send request."
+                );
+              } finally {
+                setRequestLoading(false);
               }
-            );
+            }}
+            className="mt-8 w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {requestLoading ? "Sending Request..." : "Request Access"}
+          </button>
 
-            // alert("Request sent successfully.");
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="mt-3 w-full rounded-xl border border-slate-300 bg-white py-3 font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            Back to Dashboard
+          </button>
 
-            router.push("/dashboard");
-          } catch (err: any) {
-            alert(
-              err.response?.data?.message ??
-                "Unable to send request."
-            );
-          } finally {
-            setRequestLoading(false);
-          }
-        }}
-        className="mt-8 w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {requestLoading ? "Sending Request..." : "Request Access"}
-      </button>
+        </div>
 
-      <button
-        onClick={() => router.push("/dashboard")}
-        className="mt-3 w-full rounded-xl border border-slate-300 bg-white py-3 font-medium text-slate-700 transition hover:bg-slate-100"
-      >
-        Back to Dashboard
-      </button>
-
-    </div>
-
-  </div>
-);
+      </div>
+    );
   }
 
   return (
@@ -408,6 +443,8 @@ export default function BoardPage() {
             onUndo={handleUndo}
             onRedo={handleRedo}
             onExport={handleExport}
+            onAI={() => setShowAIDialog(true)}
+            onSummarize={handleSummarize}
           />
         </div>
 
@@ -441,6 +478,18 @@ export default function BoardPage() {
           />
         </div>
       </div>
+      <GenerateDiagramDialog
+        open={showAIDialog}
+        onClose={() => setShowAIDialog(false)}
+        boardId={boardId}
+        token={token}
+      />
+      <AISummaryDialog
+        open={summaryDialogOpen}
+        onOpenChange={setSummaryDialogOpen}
+        loading={summaryLoading}
+        summary={summary}
+      />
     </div>
   );
 }

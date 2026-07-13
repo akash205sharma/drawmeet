@@ -42,8 +42,11 @@ require('./socket')(io);
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "entrypage.html"));
 });
+
 app.use('/auth', require('./routes/auth'));
 app.use('/board', require('./routes/board'));
+app.use("/ai", require('./routes/ai'));
+
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
