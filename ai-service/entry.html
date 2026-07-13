@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>DrawMeet AI Service</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Inter, system-ui, sans-serif;
+        }
+
+        body {
+            background: #0f172a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .card {
+            width: 760px;
+            max-width: 100%;
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .35);
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #cbd5e1;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .item {
+            background: #334155;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .label {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .value {
+            margin-top: 8px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .online {
+            color: #22c55e;
+        }
+
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 10px;
+        }
+
+        a {
+            text-decoration: none;
+            color: white;
+            background: #2563eb;
+            padding: 12px 18px;
+            border-radius: 10px;
+            transition: .2s;
+        }
+
+        a:hover {
+            background: #1d4ed8;
+        }
+
+        .footer {
+            margin-top: 34px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+
+        <h1>🤖 DrawMeet AI Service</h1>
+
+        <p class="subtitle">
+            AI-powered microservice for DrawMeet providing intelligent diagram generation,
+            board summarization, and future AI collaboration features.
+        </p>
+
+        <div class="grid">
+
+            <div class="item">
+                <div class="label">Service</div>
+                <div class="value online">✅ Running</div>
+            </div>
+
+            <div class="item">
+                <div class="label">Framework</div>
+                <div class="value">FastAPI</div>
+            </div>
+
+            <div class="item">
+                <div class="label">AI Stack</div>
+                <div class="value">LangChain + Gemini</div>
+            </div>
+
+            <div class="item">
+                <div class="label">Version</div>
+                <div class="value">v1.0.0</div>
+            </div>
+
+        </div>
+
+        <div class="links">
+            <a href="https://drawmeet.vercel.app" target="_blank">
+                🎨 DrawMeet Frontend
+            </a>
+
+            <a href="https://github.com/akash205sharma/drawmeet" target="_blank">
+                📂 GitHub Repository
+            </a>
+
+            <a href="/docs">
+                📘 API Documentation
+            </a>
+        </div>
+
+        <div class="footer">
+            Built with FastAPI • LangChain • Google Gemini • Pydantic
+        </div>
+
+    </div>
+
+</body>
+
+</html>
