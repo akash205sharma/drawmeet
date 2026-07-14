@@ -51,9 +51,9 @@ export default function AuthPage() {
     try {
       setLoading(true);
 
-      const boardId = await guestLogin();
+      await guestLogin();
 
-      router.push(`/board/${boardId}`);
+      router.push(`/dashboard`);
     } catch {
       setMessage("Unable to start demo.");
     } finally {

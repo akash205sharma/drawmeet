@@ -21,7 +21,7 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   login: (token: string) => Promise<void>;
-  guestLogin: () => Promise<string>;
+  guestLogin: () => Promise<void>;
   logout: () => void;
 }
 
@@ -76,7 +76,6 @@ export function AuthProvider({
     setToken(data.token);
     setUser(data.user);
 
-    return data.board.id;
   }
 
   useEffect(() => {

@@ -1,7 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const Board = require("../models/Board");
 const User = require("../models/User");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -151,12 +150,6 @@ router.post("/guest", async (req, res) => {
       ),
     });
 
-    const board = await Board.create({
-      title: "Demo Board",
-      owner: guest._id,
-      members: [],
-    });
-
     const token = jwt.sign(
       {
         id: guest._id,
@@ -177,10 +170,6 @@ router.post("/guest", async (req, res) => {
         isGuest: true,
       },
 
-      board: {
-        id: board._id,
-        title: board.title,
-      },
     });
   } catch (err) {
     console.error(err);
