@@ -1,7 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
+const Board = require("../models/Board");
 const User = require("../models/User");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -54,6 +54,7 @@ router.post("/register", async (req, res) => {
                 id: user._id,
                 username: user.username,
                 email: user.email,
+                isGuest: user.isGuest,
             },
         });
 
@@ -115,6 +116,7 @@ router.post("/login", async (req, res) => {
                 id: user._id,
                 username: user.username,
                 email: user.email,
+                isGuest: user.isGuest,
             },
         });
 
@@ -128,6 +130,66 @@ router.post("/login", async (req, res) => {
     }
 });
 
+
+// =====================
+// Guest Login
+// =====================
+
+router.post("/guest", async (req, res) => {
+  try {
+    const guestName =
+      "Guest-" +
+      Math.floor(1000 + Math.random() * 9000);
+
+    const guest = await User.create({
+      username: guestName,
+      email: `${guestName.toLowerCase()}-${Date.now()}@guest.drawmeet`,
+      password: "guest",
+      isGuest: true,
+      expiresAt: new Date(
+        Date.now() + 24 * 60 * 60 * 1000
+      ),
+    });
+
+    const board = await Board.create({
+      title: "Demo Board",
+      owner: guest._id,
+      members: [],
+    });
+
+    const token = jwt.sign(
+      {
+        id: guest._id,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "24h",
+      }
+    );
+
+    res.json({
+      token,
+
+      user: {
+        id: guest._id,
+        username: guest.username,
+        email: guest.email,
+        isGuest: true,
+      },
+
+      board: {
+        id: board._id,
+        title: board.title,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message: "Unable to create guest session",
+    });
+  }
+});
 
 // =====================
 // Current Logged-in User
@@ -150,6 +212,7 @@ router.get("/me", authMiddleware, async (req, res) => {
             id: user._id,
             username: user.username,
             email: user.email,
+            isGuest: user.isGuest,
         });
 
     } catch (err) {

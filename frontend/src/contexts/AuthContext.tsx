@@ -13,6 +13,7 @@ interface User {
   id: string;
   username: string;
   email: string;
+  isGuest: boolean;
 }
 
 interface AuthContextType {
@@ -20,6 +21,7 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   login: (token: string) => Promise<void>;
+  guestLogin: () => Promise<string>;
   logout: () => void;
 }
 
@@ -66,6 +68,17 @@ export function AuthProvider({
     setUser(null);
   }
 
+  async function guestLogin() {
+    const { data } = await axios.post(`${API}/guest`);
+
+    localStorage.setItem("token", data.token);
+
+    setToken(data.token);
+    setUser(data.user);
+
+    return data.board.id;
+  }
+
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -85,6 +98,7 @@ export function AuthProvider({
         loading,
         login,
         logout,
+        guestLogin
       }}
     >
       {children}
