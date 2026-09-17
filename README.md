@@ -2,7 +2,7 @@ Try it: https://drawmeet.vercel.app
 
 Backend: https://drawmeet.onrender.com
 
-Ai Service: https://drawmeet-ai.onrender.com
+Ai Service: https://drawmeet-1.onrender.com
 
 <video src="./assets/drawmeet_demo.mp4" controls width="100%"></video>
 
