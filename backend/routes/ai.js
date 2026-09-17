@@ -413,7 +413,10 @@ router.post(
         `${process.env.AI_SERVICE_URL}/summarize`,
         {
           board,
-        }
+        },
+        {
+    timeout: 60000
+}
       );
 
       res.json(response.data);

@@ -6,7 +6,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 const { setServers } = require("node:dns/promises");
-
+const axios = require("axios");
 setServers(["1.1.1.1", "8.8.8.8"]);
 
 const app = express();
@@ -49,6 +49,16 @@ app.use("/ai", require('./routes/ai'));
 
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
+
+  try {
+    await axios.get(`${process.env.AI_SERVICE_URL}`, {
+      timeout: 60000,
+    });
+
+    console.log("AI service is awake.");
+  } catch (err) {
+    console.log("AI service is sleeping or unavailable.");
+  }
 });
